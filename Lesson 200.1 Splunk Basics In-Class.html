@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Signal Harbor | Splunk Operations Practicum</title>
+<style>
+:root{
+  --ink:#10233d;--muted:#5c6f86;--paper:#f4f8fb;--card:#fff;--line:#d7e3ed;
+  --nav:#0d2741;--accent:#f5a623;--teal:#0d8b8f;--blue:#1677b8;--green:#287a5b;
+  --danger:#a94442;--shadow:0 16px 45px rgba(16,35,61,.12);--r:18px
+}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--paper);color:var(--ink)}
+button,input,textarea{font:inherit} button{cursor:pointer}
+.shell{min-height:100vh;display:grid;grid-template-columns:290px 1fr;transition:grid-template-columns .22s ease}.shell.menu-collapsed{grid-template-columns:76px 1fr}
+.sidebar{background:linear-gradient(180deg,#0b2239,#123b5d);color:#fff;padding:24px 18px;position:sticky;top:0;height:100vh;overflow:auto;transition:padding .22s ease}.shell.menu-collapsed .sidebar{padding:18px 10px}.shell.menu-collapsed .brand>div:last-child,.shell.menu-collapsed .progress-wrap,.shell.menu-collapsed .nav button span:last-child,.shell.menu-collapsed .sidebar-note{display:none}.shell.menu-collapsed .brand{justify-content:center}.shell.menu-collapsed .nav button{justify-content:center;padding:10px 4px}.shell.menu-collapsed .dot{width:30px;height:30px}.menu-toggle{width:100%;border:1px solid #ffffff2b;background:#ffffff12;color:#fff;border-radius:10px;padding:9px 10px;margin:0 0 14px;font-weight:800}.menu-toggle:hover{background:#ffffff20}
+.brand{display:flex;gap:12px;align-items:center;margin-bottom:24px}.mark{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#ffd27b);display:grid;place-items:center;color:#17324c;font-weight:900}
+.brand h1{font-size:17px;margin:0}.brand small{opacity:.72}
+.progress-wrap{margin:16px 0 20px}.progress-track{height:8px;background:#ffffff22;border-radius:99px;overflow:hidden}.progress-bar{height:100%;background:var(--accent);width:0}.progress-label{font-size:12px;margin-top:7px;opacity:.78}
+.nav{display:grid;gap:5px}.nav button{border:0;text-align:left;padding:10px 11px;border-radius:10px;background:transparent;color:#dce9f3;font-size:13px;display:flex;gap:9px;align-items:center}
+.nav button:hover,.nav button.active{background:#ffffff16;color:#fff}.nav button.done .dot{background:#5fd3a3;color:#08291d}.dot{width:22px;height:22px;border-radius:50%;background:#ffffff18;display:grid;place-items:center;font-size:11px;flex:none}
+.sidebar-note{margin-top:18px;padding:12px;border:1px solid #ffffff20;border-radius:12px;font-size:12px;line-height:1.45;color:#d7e5ef}
+.main{padding:28px;min-width:0}.topbar{max-width:1120px;margin:auto auto 18px;display:flex;justify-content:space-between;gap:12px;align-items:center}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--blue);font-weight:800}.status{font-size:12px;background:#e6f2f7;padding:8px 12px;border-radius:99px}
+.screen{display:none;max-width:1120px;margin:auto}.screen.active{display:block;animation:fade .25s ease}@keyframes fade{from{opacity:.2;transform:translateY(5px)}}
+.hero,.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}.hero{padding:42px;position:relative;overflow:hidden}.hero:after{content:"";position:absolute;width:330px;height:330px;border-radius:50%;right:-120px;top:-150px;background:radial-gradient(circle,#f5a62344,transparent 68%)}
+h2{font-size:clamp(28px,4vw,48px);line-height:1.04;margin:10px 0 14px}h3{margin:0 0 10px;font-size:22px}h4{margin:0 0 8px}.lead{font-size:18px;line-height:1.6;color:#435a70;max-width:820px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;margin-top:18px}.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
+.panel{padding:22px}.panel p,.panel li{line-height:1.55;color:#40566b}.kicker{font-size:12px;color:var(--teal);font-weight:800;text-transform:uppercase;letter-spacing:.08em}.pill{display:inline-block;border:1px solid var(--line);background:#f8fbfd;padding:6px 9px;border-radius:99px;font-size:12px;margin:3px}
+.btn{border:0;border-radius:11px;padding:11px 16px;font-weight:750;background:var(--nav);color:white}.btn.secondary{background:white;color:var(--ink);border:1px solid var(--line)}.btn.accent{background:var(--accent);color:#17293b}.btn:disabled{opacity:.45;cursor:not-allowed}
+.actions{display:flex;justify-content:space-between;gap:10px;margin-top:22px;flex-wrap:wrap}.actions .right{display:flex;gap:9px}
+input[type=text]{width:100%;padding:13px 14px;border:1px solid #bdcedc;border-radius:10px;background:#fff}textarea{width:100%;min-height:120px;padding:13px;border:1px solid #bdcedc;border-radius:10px;resize:vertical}
+.callout{border-left:4px solid var(--accent);background:#fff8e8;padding:14px 16px;border-radius:0 12px 12px 0;line-height:1.55}.brief{background:linear-gradient(135deg,#102e49,#164c6f);color:#fff}.brief p,.brief li{color:#e3edf4}.brief .kicker{color:#ffc96b}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.node{padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:white;font-weight:750}.arrow{color:var(--blue);font-weight:900}
+.artifact{background:#0d1c2b;color:#d6e8f4;border-radius:14px;padding:18px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;line-height:1.55;overflow:auto}.artifact .dim{color:#7da1b8}.artifact .warn{color:#ffc25c}.artifact .ok{color:#73d6ad}
+.activity-brief{border:1px solid #b8d8e7;background:#eef8fc;border-radius:14px;padding:18px;margin-bottom:16px}.activity-brief strong{color:#0c5d82}
+.choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.choice{border:1px solid var(--line);background:white;border-radius:12px;padding:14px;text-align:left;color:var(--ink)}.choice.selected{outline:3px solid #f5a62366;border-color:var(--accent)}.choice.good{border-color:#4ca77e;background:#eef9f4}.choice.bad{border-color:#d47c78;background:#fff3f2}
+.build-zone{display:grid;grid-template-columns:1fr 1fr;gap:14px}.source-list,.target-list{min-height:270px;border:1px dashed #9eb5c5;border-radius:14px;padding:12px;background:#f8fbfd}.token{padding:12px;border:1px solid var(--line);border-radius:10px;background:white;margin:8px 0;cursor:pointer}.token.active{outline:3px solid #f5a62355}.route-row{display:grid;grid-template-columns:150px 1fr 1fr;gap:8px;align-items:center;margin:8px 0}.route-row select{padding:10px;border-radius:9px;border:1px solid var(--line);background:#fff}
+.evidence-board{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.evidence{background:white;border:1px solid var(--line);border-radius:13px;padding:15px;cursor:pointer}.evidence.selected{border-color:var(--teal);box-shadow:0 0 0 3px #0d8b8f22}.evidence small{color:var(--muted)}
+.timeline{display:grid;gap:8px}.event{padding:12px;border:1px solid var(--line);border-radius:10px;background:white;display:flex;gap:10px;align-items:flex-start}.event input{margin-top:4px}
+.priority{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.decision-card{border:1px solid var(--line);border-radius:13px;background:white;padding:15px}.decision-card input{width:100%;margin-top:8px}
+.feedback{margin-top:14px;padding:16px;border-radius:12px;display:none}.feedback.show{display:block}.feedback.success{background:#eaf8f1;border:1px solid #9ed4ba}.feedback.info{background:#edf6fb;border:1px solid #a8cee1}.feedback.warn{background:#fff6e7;border:1px solid #e7c47c}
+.note-lock{margin-top:16px;border:1px solid #d8caa8;background:#fffaf0;border-radius:14px;padding:17px}.note-lock.locked textarea{display:none}.locklabel{font-weight:800;color:#755d25}
+.metric{font-size:30px;font-weight:900}.small{font-size:13px;color:var(--muted)}.hidden-print{}
+@media(max-width:900px){.shell,.shell.menu-collapsed{grid-template-columns:1fr}.sidebar{height:auto;position:relative}.nav{grid-template-columns:repeat(2,1fr)}.main{padding:16px}.c4,.c5,.c6,.c7,.c8{grid-column:span 12}.choice-grid,.build-zone,.evidence-board,.priority{grid-template-columns:1fr}.route-row{grid-template-columns:1fr}.hero{padding:26px}}
+@media print{.sidebar,.topbar,.actions,.no-print{display:none!important}.shell{display:block}.main{padding:0}.screen{display:none!important}.screen#print-summary{display:block!important}.panel,.hero{box-shadow:none;border:1px solid #bbb}.print-only{display:block!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="brand"><div class="mark">SH</div><div><h1>Signal Harbor</h1><small>Splunk Operations Practicum</small></div></div>
+  <button class="menu-toggle no-print" id="menuToggle" onclick="toggleMenu()" aria-expanded="true" title="Collapse or expand menu">☰ Collapse Menu</button>
+  <div class="progress-wrap"><div class="progress-track"><div class="progress-bar" id="progressBar"></div></div><div class="progress-label" id="progressLabel">0 of 13 stages complete</div></div>
+  <nav class="nav" id="nav"></nav>
+  <div class="sidebar-note"><b>Practitioner Cycle</b><br>Operator → Detective → Judge<br><br>Your work carries forward. What you configure becomes evidence; what you discover becomes the basis for judgment.</div>
+</aside>
+<main class="main">
+<div class="topbar"><div><div class="eyebrow">Lesson 200.1 · Splunk Basics</div><b id="screenTitle">Welcome</b></div><div class="status" id="learnerStatus">Learner session</div></div>
+
+<section class="screen active" data-stage="0" data-title="Welcome">
+ <div class="hero"><div class="eyebrow">Harborline Municipal Services · Data Operations</div><h2>Turn machine data into operational visibility.</h2>
+ <p class="lead">You are entering a guided Splunk practicum built around one workplace mission. You will configure a data intake plan, investigate the resulting evidence, and make a defensible monitoring decision.</p>
+ <div class="grid"><div class="panel c7"><h3>Identify yourself</h3><p>Your name will appear on the final participation summary.</p><label for="learnerName"><b>Learner name</b></label><input id="learnerName" type="text" placeholder="Enter your name"></div>
+ <div class="panel c5"><div class="kicker">Experience</div><div class="metric">Apply → Analyze → Evaluate</div><p>One continuous workplace simulation using the Operator, Detective, and Judge progression.</p></div></div>
+ </div>
+ <div class="actions"><span></span><button class="btn accent" onclick="completeAndNext(0)">Enter Operations Floor →</button></div>
+</section>
+
+<section class="screen" data-stage="1" data-title="Prework → Practice">
+ <div class="panel"><div class="kicker">Transition from Reporter → Translator</div><h3>You already built the vocabulary. Now use it.</h3>
+ <p>Your prework prepared you to identify important information, recall Splunk terminology, explain concepts in your own words, and connect foundational ideas. The classroom experience now shifts from knowing to professional performance.</p>
+ <div class="flow"><span class="node">Machine data</span><span class="arrow">→</span><span class="node">Splunk functions</span><span class="arrow">→</span><span class="node">Components</span><span class="arrow">→</span><span class="node">Operational decisions</span></div>
+ <div class="callout" style="margin-top:18px"><b>Your role:</b> Junior Data Operations Analyst. <b>Your mission:</b> help Harborline establish useful Splunk visibility before a service-impact review.</div></div>
+ <div class="actions"><button class="btn secondary" onclick="go(0)">← Back</button><button class="btn" onclick="completeAndNext(1)">Continue →</button></div>
+</section>
+
+<section class="screen" data-stage="2" data-title="Learning Objectives">
+ <div class="panel"><div class="kicker">What you will demonstrate</div><h3>Lesson 200.1 learning objectives</h3>
+ <div class="grid">
+ <div class="c6"><p>By the end of this experience, you should be able to explain machine data, describe Splunk, identify Splunk components and uses, and distinguish Splunk apps and deployment types.</p></div>
+ <div class="c6"><p>You will also connect the lesson to practical navigation and user-setting responsibilities, including browser-based access and the importance of correct time-zone settings.</p></div>
+ </div>
+ <div class="callout"><b>Performance lens:</b> You will not simply define these concepts. You will use them to build, investigate, and justify a workplace approach.</div></div>
+ <div class="actions"><button class="btn secondary" onclick="go(1)">← Back</button><button class="btn" onclick="completeAndNext(2)">I understand the targets →</button></div>
+</section>
+
+<section class="screen" data-stage="3" data-title="Mission Briefing">
+ <div class="panel brief"><div class="kicker">Workplace Mission</div><h3>Harborline service telemetry intake</h3>
+ <p>Harborline operates public-facing web applications, internal servers, network infrastructure, and environmental sensors. Leadership wants a small Splunk pilot that can make machine-generated information searchable and useful before expanding the deployment.</p>
+ <div class="grid"><div class="c4"><h4>Stakeholder</h4><p>Maya Chen, IT Operations Lead, needs visibility into service health.</p></div><div class="c4"><h4>Security concern</h4><p>The security team needs suspicious login and network activity to be investigable.</p></div><div class="c4"><h4>Your responsibility</h4><p>Build a defensible intake path, examine evidence, and recommend the operating approach.</p></div></div>
+ </div>
+ <div class="panel" style="margin-top:16px"><h4>Source-supported operating model</h4><div class="flow"><span class="node">Source machines</span><span class="arrow">→</span><span class="node">Forwarders</span><span class="arrow">→</span><span class="node">Indexers</span><span class="arrow">→</span><span class="node">Search Head</span><span class="arrow">→</span><span class="node">Search / Alert / Report</span></div></div>
+ <div class="actions"><button class="btn secondary" onclick="go(2)">← Back</button><button class="btn" onclick="completeAndNext(3)">Accept mission →</button></div>
+</section>
+
+<section class="screen" data-stage="4" data-title="Operator Brief">
+ <div class="panel brief"><div class="kicker">Phase 1 · Operator · Apply</div><h3>Build the intake plan</h3>
+ <p>You are not being asked to recite component definitions. You must apply them to a working data path. Think about where data originates, what collects it, what makes it searchable, and where users interact with results.</p>
+ <ul><li><b>Starting point:</b> four machine-data sources need an intake path.</li><li><b>Professional output:</b> a completed Splunk component routing plan.</li><li><b>Success:</b> each component performs the responsibility described in the lesson.</li></ul></div>
+ <div class="actions"><button class="btn secondary" onclick="go(3)">← Back</button><button class="btn" onclick="completeAndNext(4)">Open Operator Workspace →</button></div>
+</section>
+
+<section class="screen" data-stage="5" data-title="Operator Workspace">
+ <div class="activity-brief"><strong>Activity Brief · Intake Architecture</strong><br>Harborline has server, network, application, and security data. Configure the path those records should take through the Splunk components. Focus on the component's professional responsibility rather than its name. Approx. 7 minutes.</div>
+ <div class="grid">
+ <div class="panel c7"><div class="kicker">Live Configuration Challenge</div><h3>Build Harborline's Splunk data pipeline</h3>
+ <p>Maya has handed you three empty positions in the pilot architecture. Configure the path correctly so machine data can travel from the source systems to the analyst.</p>
+ <div class="callout"><b>Think like the operator:</b> Do not start with the component names. Start with the job that must happen at each point in the data journey.</div>
+ <div id="routes" style="margin-top:16px">
+  <div class="route-row"><b>① Source collection</b><select data-answer="Forwarder"><option>Choose component...</option><option>Search Head</option><option>Forwarder</option><option>Indexer</option></select><span class="small">Runs near the source and sends data onward</span></div>
+  <div class="route-row"><b>② Processing + storage</b><select data-answer="Indexer"><option>Choose component...</option><option>Indexer</option><option>Forwarder</option><option>Search Head</option></select><span class="small">Processes events and makes them searchable</span></div>
+  <div class="route-row"><b>③ Analyst interaction</b><select data-answer="Search Head"><option>Choose component...</option><option>Forwarder</option><option>Search Head</option><option>Indexer</option></select><span class="small">Lets the analyst search and work with results</span></div>
+ </div>
+ <div class="flow" style="margin:18px 0"><span class="node">Harborline Sources</span><span class="arrow">→</span><span class="node" id="pipe1">?</span><span class="arrow">→</span><span class="node" id="pipe2">?</span><span class="arrow">→</span><span class="node" id="pipe3">?</span><span class="arrow">→</span><span class="node">Operational Insight</span></div>
+ <div style="display:flex;gap:9px;flex-wrap:wrap"><button class="btn" onclick="checkOperator()">Run pipeline test</button><button class="btn secondary" onclick="operatorHint()">Need a clue?</button></div>
+ <div id="opHint" class="feedback info"></div><div id="opFeedback" class="feedback"></div></div>
+ <div class="panel c5"><div class="kicker">Incoming Telemetry</div><h4>Machine-data intake console</h4><div class="artifact"><span class="dim">LIVE SOURCES</span><br><span class="ok">●</span> web01 &nbsp; application events<br><span class="ok">●</span> auth01 &nbsp; login events<br><span class="ok">●</span> edge-fw &nbsp; network traffic<br><span class="ok">●</span> sensor07 &nbsp; temperature<br><br><span class="dim">MISSION TARGET</span><br>✓ searchable + analyzable data<br>✓ monitoring + alerts<br>✓ reports + dashboards</div>
+ <div class="callout" style="margin-top:14px"><b>Why the middle step matters:</b> raw machine data is not automatically useful. The Indexer processes the incoming data into searchable events so Splunk can search, correlate, monitor, and report on it.</div>
+ <p class="small"><b>Operator question:</b> If Harborline installed only a Search Head, what essential part of the data journey would still be missing?</p></div>
+ </div>
+ <div class="note-lock locked" id="opNoteBox"><div class="locklabel">Performance Note — Locked</div><p id="opNotePrompt">Complete and validate the routing plan to unlock this reasoning note.</p><textarea id="opNote" placeholder="Document your reasoning..."></textarea></div>
+ <div class="actions"><button class="btn secondary" onclick="go(4)">← Back</button><div class="right"><button class="btn secondary" onclick="completeStage(5);go(6)">Skip Activity →</button><button id="opNext" class="btn" disabled onclick="finishNote('op',5,6)">Submit Performance Note →</button></div></div>
+</section>
+
+<section class="screen" data-stage="6" data-title="Detective Brief">
+ <div class="panel brief"><div class="kicker">Phase 2 · Detective · Analyze</div><h3>Investigate what the pilot is telling you</h3>
+ <p>The intake path is now operational. Maya reports that the dashboard shows an unusual burst of authentication failures followed by a successful login and outbound traffic. Your job is to examine relationships across machine data—not treat each event as an isolated fact.</p>
+ <ul><li>Inspect timestamps, source/destination details, event types, and relationships.</li><li>Distinguish what the evidence establishes from what remains uncertain.</li><li>Use Splunk's search/investigate purpose: search, filter, correlate, visualize, and analyze.</li></ul></div>
+ <div class="actions"><button class="btn secondary" onclick="go(5)">← Back</button><button class="btn" onclick="completeAndNext(6)">Open Investigation →</button></div>
+</section>
+
+<section class="screen" data-stage="7" data-title="Detective Investigation">
+ <div class="activity-brief"><strong>Activity Brief · Incident Correlation Desk</strong><br>
+ Maya has escalated a possible service-security event. Four indexed records arrived from different machine-data sources. Work the case like an analyst: inspect the evidence, build the incident timeline, identify which records meaningfully correlate, and write a finding that stays inside what the evidence actually proves. Approx. 8 minutes.</div>
+
+ <div class="grid">
+  <div class="panel c8">
+   <div class="kicker">Case HMS-0914 · Investigation Console</div>
+   <h3>What happened between 09:14 and 09:18?</h3>
+   <p>Select a record to inspect it. Mark records <b>Relevant</b> when they help reconstruct the suspicious sequence or <b>Context</b> when they do not materially support that sequence.</p>
+
+   <div class="timeline" id="detTimeline">
+    <div class="event evidence" data-id="e1" data-role="relevant">
+      <div style="min-width:76px"><b>09:14:02</b><br><small>AUTH</small></div>
+      <div style="flex:1"><b>17 failed logins</b><div class="small">user=jrivera · src=10.22.8.44</div></div>
+      <button class="btn secondary" type="button" onclick="inspectDet('e1')">Inspect</button>
+    </div>
+    <div class="event evidence" data-id="e2" data-role="relevant">
+      <div style="min-width:76px"><b>09:16:31</b><br><small>AUTH</small></div>
+      <div style="flex:1"><b>Successful login</b><div class="small">user=jrivera · src=10.22.8.44</div></div>
+      <button class="btn secondary" type="button" onclick="inspectDet('e2')">Inspect</button>
+    </div>
+    <div class="event evidence" data-id="e3" data-role="relevant">
+      <div style="min-width:76px"><b>09:18:10</b><br><small>NETWORK</small></div>
+      <div style="flex:1"><b>Outbound HTTPS session</b><div class="small">app-03 → 198.51.100.24 · 842119 bytes</div></div>
+      <button class="btn secondary" type="button" onclick="inspectDet('e3')">Inspect</button>
+    </div>
+    <div class="event evidence" data-id="e4" data-role="context">
+      <div style="min-width:76px"><b>09:18:12</b><br><small>SENSOR</small></div>
+      <div style="flex:1"><b>Normal temperature</b><div class="small">sensor07 · 71°F · NORMAL</div></div>
+      <button class="btn secondary" type="button" onclick="inspectDet('e4')">Inspect</button>
+    </div>
+   </div>
+  </div>
+
+  <div class="panel c4">
+   <div class="kicker">Evidence Inspector</div>
+   <h4 id="inspectTitle">Select a record</h4>
+   <div class="artifact" id="inspectArtifact">Choose <b>Inspect</b> beside an event to examine the indexed record.</div>
+   <div id="inspectMeaning" class="small" style="margin:12px 0">Your job is to decide what each record contributes to the investigation.</div>
+   <div id="classifyButtons" style="display:none;gap:8px;flex-wrap:wrap">
+    <button class="btn" type="button" onclick="classifyDet('relevant')">Add as Relevant</button>
+    <button class="btn secondary" type="button" onclick="classifyDet('context')">Mark as Context</button>
+   </div>
+  </div>
+ </div>
+
+ <div class="panel" style="margin-top:14px">
+  <div class="kicker">Step 2 · Correlation Board</div><h3>Which events tell one connected story?</h3>
+  <div class="callout"><b>What you are doing:</b> Decide which logs should be investigated <u>together</u>. Put a log in the evidence chain when it meaningfully helps explain the suspicious sequence. Put it in Context when it is valid machine data but does not help explain this incident.</div>
+  <div class="grid" style="margin-top:14px">
+   <div class="c7"><h4>Suspicious sequence</h4><div class="flow" id="correlationBoard">
+    <span class="node" id="corr1">1 · What happened first?</span><span class="arrow">→</span>
+    <span class="node" id="corr2">2 · What happened next?</span><span class="arrow">→</span>
+    <span class="node" id="corr3">3 · What followed?</span>
+   </div></div>
+   <div class="c5"><h4>Context / not part of this sequence</h4><div id="contextTray" class="callout"><b>Nothing placed here yet.</b><br><span class="small">Place a valid but unrelated log here.</span></div></div>
+  </div>
+  <div class="panel" style="margin-top:14px;background:#f8fbfd;box-shadow:none"><h4>How do I decide?</h4>
+   <p class="small"><b>Ask:</b> Does this event involve the same account, source, system, or developing behavior? Does its timing help explain what happened before or after? Does connecting it add useful evidence?</p>
+   <p class="small"><b>Example:</b> failed logins followed by a successful login for the same account and source have a meaningful relationship. Two unrelated events occurring close together do not automatically belong in the same chain.</p>
+  </div>
+  <button class="btn secondary" style="margin-top:12px" type="button" onclick="detHint()">Walk me through a clue</button>
+  <div id="detHintBox" class="feedback info"></div>
+ </div>
+
+ <div class="panel" style="margin-top:14px">
+  <div class="kicker">Analyst Finding</div><h3>What does the evidence support?</h3>
+  <p>Choose the strongest conclusion after you have built your evidence chain.</p>
+  <div class="choice-grid" id="detectChoices">
+   <button class="choice" onclick="selectDetect(this)">The repeated failures followed by a successful login from the same source most strongly indicate an authentication-focused anomaly. The later HTTPS session should be reviewed separately until evidence directly connects the authenticated activity to app-03.</button>
+   <button class="choice" data-correct="1" onclick="selectDetect(this)">The authentication events and subsequent outbound HTTPS activity create a time-linked pattern that justifies broader investigation, but the available records are not sufficient to establish a causal relationship between the login activity and the network session.</button>
+   <button class="choice" onclick="selectDetect(this)">The sequence is most consistent with a potentially compromised account followed by suspicious outbound activity. The analyst should treat account compromise as the working incident explanation while gathering additional evidence to confirm or reject it.</button>
+   <button class="choice" onclick="selectDetect(this)">The outbound HTTPS transfer is the highest-value indicator because it represents movement of a substantial amount of data. The authentication activity is supporting context, but the network event should drive the initial incident conclusion.</button>
+  </div>
+  <button class="btn" style="margin-top:12px" onclick="checkDetective()">Submit analyst finding</button>
+  <div id="detFeedback" class="feedback"></div>
+ </div>
+
+ <div class="note-lock locked" id="detNoteBox"><div class="locklabel">Investigation Note — Locked</div><p id="detNotePrompt">Complete the correlation board and submit an evidence-supported finding to unlock this note.</p><textarea id="detNote" placeholder="Explain which evidence relationships shaped your conclusion..."></textarea></div>
+ <div class="actions"><button class="btn secondary" onclick="go(6)">← Back</button><button id="detNext" class="btn" disabled onclick="finishNote('det',7,8)">Submit Investigation Note →</button></div>
+</section>
+
+<section class="screen" data-stage="8" data-title="Judge Brief">
+ <div class="panel brief"><div class="kicker">Phase 3 · Judge · Evaluate</div><h3>Choose the operating approach</h3>
+ <p>The pilot demonstrated value, but Harborline must decide how to expand. Leadership wants a recommendation that accounts for scale, management responsibility, and the need for useful monitoring—not simply the option with the most components.</p>
+ <p>Your judgment must use the lesson's deployment distinctions: standalone, distributed, and cloud.</p></div>
+ <div class="actions"><button class="btn secondary" onclick="go(7)">← Back</button><button class="btn" onclick="completeAndNext(8)">Open Decision Desk →</button></div>
+</section>
+
+<section class="screen" data-stage="9" data-title="Judge Decision">
+ <div class="activity-brief"><strong>Activity Brief · Architecture Review Board</strong><br>
+ Harborline's pilot worked. Now leadership wants to expand it. You are the analyst presenting to the Architecture Review Board. Your job is to weigh the three lesson-defined deployment models against Harborline's actual constraints, eliminate weak fits, and defend a final recommendation. Approx. 7 minutes.</div>
+
+ <div class="grid">
+  <div class="panel c5">
+   <div class="kicker">Board Brief · Requirements</div><h3>What Harborline actually needs</h3>
+   <div class="artifact"><span class="dim">EXPANSION REQUIREMENTS</span><br>
+   01  Pilot will grow beyond one Splunk instance<br>
+   02  Responsibilities should be divided as usage grows<br>
+   03  Harborline wants to manage its own Splunk infrastructure<br>
+   04  Search and analysis must remain available to users</div>
+   <div class="callout" style="margin-top:14px"><b>Judge mindset:</b> Do not choose the deployment that sounds most advanced. Choose the one whose characteristics best satisfy the stated requirements.</div>
+  </div>
+  <div class="panel c7">
+   <div class="kicker">Step 1 · Requirement Weighting</div><h3>What should drive the decision?</h3>
+   <p>Before choosing a deployment, identify the <b>two requirements that most clearly distinguish</b> the three options.</p>
+   <div class="choice-grid" id="judgeReqs">
+    <button class="choice" data-key="multi" onclick="toggleJudgeReq(this)">Growth beyond one Splunk instance</button>
+    <button class="choice" data-key="manage" onclick="toggleJudgeReq(this)">Harborline wants to manage its own infrastructure</button>
+    <button class="choice" data-key="search" onclick="toggleJudgeReq(this)">Users need search and analysis</button>
+    <button class="choice" data-key="pilot" onclick="toggleJudgeReq(this)">The original pilot was successful</button>
+   </div>
+   <div id="judgeReqFeedback" class="feedback info"></div>
+  </div>
+ </div>
+
+ <div class="panel" style="margin-top:14px">
+  <div class="kicker">Step 2 · Deployment Trade-off Board</div><h3>Interrogate each option</h3>
+  <p class="small">Open each deployment model. Decide whether it is a strong fit, possible but compromised, or a weak fit for Harborline. Your notes will carry into the final decision.</p>
+  <div class="priority" id="judgeCards">
+   <div class="decision-card">
+    <h4>Standalone</h4><p>One Splunk instance performs ingestion, indexing, search, and visualization.</p>
+    <select data-deploy="Standalone" onchange="judgeFit(this)"><option value="">Assess fit...</option><option>Strong fit</option><option>Possible with trade-offs</option><option>Weak fit</option></select>
+    <textarea id="fitStandalone" style="min-height:78px;margin-top:8px" placeholder="What requirement supports or challenges this option?"></textarea>
+   </div>
+   <div class="decision-card">
+    <h4>Distributed</h4><p>Multiple Splunk instances perform one or more specialized functions.</p>
+    <select data-deploy="Distributed" onchange="judgeFit(this)"><option value="">Assess fit...</option><option>Strong fit</option><option>Possible with trade-offs</option><option>Weak fit</option></select>
+    <textarea id="fitDistributed" style="min-height:78px;margin-top:8px" placeholder="What requirement supports or challenges this option?"></textarea>
+   </div>
+   <div class="decision-card">
+    <h4>Cloud</h4><p>Similar to distributed, but hosted and managed by a third-party cloud provider.</p>
+    <select data-deploy="Cloud" onchange="judgeFit(this)"><option value="">Assess fit...</option><option>Strong fit</option><option>Possible with trade-offs</option><option>Weak fit</option></select>
+    <textarea id="fitCloud" style="min-height:78px;margin-top:8px" placeholder="What requirement supports or challenges this option?"></textarea>
+   </div>
+  </div>
+ </div>
+
+ <div class="panel" style="margin-top:14px">
+  <div class="kicker">Step 3 · Executive Decision</div><h3>Make the call</h3>
+  <p>Now commit to one deployment. Your recommendation should emerge from the requirements and trade-offs you just evaluated.</p>
+  <div class="choice-grid">
+   <button class="choice judge-final" data-value="Standalone" onclick="selectJudgeFinal(this)">Recommend Standalone</button>
+   <button class="choice judge-final" data-value="Distributed" onclick="selectJudgeFinal(this)">Recommend Distributed</button>
+   <button class="choice judge-final" data-value="Cloud" onclick="selectJudgeFinal(this)">Recommend Cloud</button>
+  </div>
+  <label style="display:block;margin-top:14px"><b>Executive justification</b></label>
+  <textarea id="judgeJust" placeholder="Defend your choice using Harborline's requirements and at least one trade-off you identified."></textarea>
+  <button class="btn" onclick="checkJudge()">Present to review board</button>
+  <button class="btn secondary" style="margin-left:6px" onclick="judgeHint()">Boardroom clue</button>
+  <div id="judgeHintBox" class="feedback info"></div><div id="judgeFeedback" class="feedback"></div>
+ </div>
+
+ <div class="note-lock locked" id="judgeNoteBox"><div class="locklabel">Decision Note — Locked</div><p id="judgeNotePrompt">Complete the architecture review and present your recommendation to unlock this note.</p><textarea id="judgeNote" placeholder="Explain how the constraints, alternatives, and consequences influenced your judgment..."></textarea></div>
+ <div class="actions"><button class="btn secondary" onclick="go(8)">← Back</button><button id="judgeNext" class="btn" disabled onclick="finishNote('judge',9,10)">Submit Decision Note →</button></div>
+</section>
+
+<section class="screen" data-stage="10" data-title="Final Debrief & Reflection">
+ <div class="panel"><div class="kicker">Practitioner Cycle Debrief</div><h3>From raw events to professional judgment</h3>
+ <p>You moved through the same conceptual chain the lesson develops: machine-generated data becomes useful when it can be collected, indexed, searched, correlated, monitored, and presented for action.</p>
+ <div class="flow"><span class="node">Machine data</span><span class="arrow">→</span><span class="node">Forward</span><span class="arrow">→</span><span class="node">Index</span><span class="arrow">→</span><span class="node">Search & investigate</span><span class="arrow">→</span><span class="node">Monitor / report</span><span class="arrow">→</span><span class="node">Decision</span></div>
+ <h4 style="margin-top:20px">Reflection</h4><p>What distinction or relationship became clearer as you moved from configuring components to investigating evidence and evaluating a deployment?</p><textarea id="finalReflection" placeholder="Write your reflection..."></textarea></div>
+ <div class="actions"><button class="btn secondary" onclick="go(9)">← Back</button><button class="btn" onclick="finishReflection()">Complete debrief →</button></div>
+</section>
+
+<section class="screen" data-stage="11" data-title="Participation Summary" id="print-summary">
+ <div class="panel"><div class="kicker">Completion Record</div><h3>Participation Summary</h3><div id="summaryContent"></div>
+ <div class="callout"><b>Knowledge carried forward:</b> Splunk can collect/index/search/analyze machine-generated data; Forwarders collect and send, Indexers process and make data searchable, and Search Heads support user search and analysis. Splunk supports IT operations, security/compliance, business analytics, and IoT use cases.</div></div>
+ <div class="actions no-print"><button class="btn secondary" onclick="go(10)">← Back</button><div class="right"><button class="btn secondary" onclick="window.print()">Print / Save Results</button><button class="btn" onclick="completeAndNext(11)">Continue →</button></div></div>
+</section>
+
+<section class="screen" data-stage="12" data-title="Professional Next Steps">
+ <div class="hero"><div class="eyebrow">Learning Transfer</div><h2>Carry the mental model into Splunk.</h2><p class="lead">When you next open Splunk, connect interface actions to the system behind them: machine data originates somewhere, forwarders can collect it, indexers make it searchable, and the search experience helps you investigate and turn data into operational insight.</p>
+ <div class="grid"><div class="panel c4"><h4>Navigate</h4><p>Recognize the web-based interface, search bar, results, navigation, dashboards, and visualization editors. Splunk browser access uses port 8000 in the lesson.</p></div><div class="panel c4"><h4>Configure thoughtfully</h4><p>Account and preference settings matter. In particular, aligning the time zone helps timestamps make sense during analysis.</p></div><div class="panel c4"><h4>Extend when needed</h4><p>Splunk apps package dashboards, reports, and other content; add-ons provide additional functionality such as inputs and parsers for specific data sources.</p></div></div></div>
+ <div class="actions"><button class="btn secondary" onclick="go(11)">← Review summary</button><button class="btn accent" onclick="completeStage(12);alert('Practicum complete. You may print your Participation Summary from the previous stage.')">Finish Practicum ✓</button></div>
+</section>
+</main>
+</div>
+<script>
+const labels=["Welcome","Prework → Practice","Objectives","Mission Briefing","Operator Brief","Operator Workspace","Detective Brief","Detective Investigation","Judge Brief","Judge Decision","Debrief","Participation Summary","Next Steps"];
+const state={stage:0,done:new Set(),name:"",operator:false,detective:false,judge:false,evidence:new Set(),detectChoice:null};
+function toggleMenu(){const shell=document.querySelector(".shell"),btn=document.getElementById("menuToggle");shell.classList.toggle("menu-collapsed");const collapsed=shell.classList.contains("menu-collapsed");btn.textContent=collapsed?"☰":"☰ Collapse Menu";btn.setAttribute("aria-expanded",String(!collapsed));btn.title=collapsed?"Expand menu":"Collapse menu"}
+function buildNav(){const n=document.getElementById("nav");n.innerHTML="";labels.forEach((x,i)=>{const b=document.createElement("button");b.innerHTML=`<span class="dot">${state.done.has(i)?"✓":i+1}</span><span>${x}</span>`;b.className=(i===state.stage?"active ":"")+(state.done.has(i)?"done":"");b.onclick=()=>go(i);n.appendChild(b)});updateProgress()}
+function updateProgress(){let c=state.done.size;document.getElementById("progressBar").style.width=(c/13*100)+"%";document.getElementById("progressLabel").textContent=`${c} of 13 stages complete`}
+function go(i){state.stage=i;document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",+s.dataset.stage===i));document.getElementById("screenTitle").textContent=labels[i];buildNav();window.scrollTo({top:0,behavior:"smooth"});if(i===11)renderSummary()}
+function completeStage(i){state.done.add(i);buildNav()}
+function completeAndNext(i){if(i===0){let v=document.getElementById("learnerName").value.trim();if(!v){alert("Please enter your name before entering the practicum.");return}state.name=v;document.getElementById("learnerStatus").textContent=v+" · active session"}completeStage(i);go(Math.min(i+1,12))}
+function updatePipeline(){let sels=[...document.querySelectorAll("#routes select")];["pipe1","pipe2","pipe3"].forEach((id,i)=>{let v=sels[i].value;document.getElementById(id).textContent=v.startsWith("Choose")?"?":v})}
+document.querySelectorAll("#routes select").forEach(s=>s.addEventListener("change",updatePipeline));
+function operatorHint(){let h=document.getElementById("opHint");h.className="feedback show info";h.innerHTML="<b>Clue — follow the data.</b> First ask what collects information where it is generated. Next ask what must process and store events so they become searchable. Finally ask which component gives the user the search experience. Try to solve the responsibilities before matching the names."}
+function checkOperator(){let sels=[...document.querySelectorAll("#routes select")],correct=0;sels.forEach(s=>{if(s.value===s.dataset.answer)correct++});updatePipeline();let f=document.getElementById("opFeedback");f.className="feedback show "+(correct===3?"success":"warn");if(correct===3){f.innerHTML="<b>Pipeline online — 3/3 responsibilities aligned.</b><br><br><b>Forwarder:</b> collects machine data from source systems and sends it toward Splunk. <b>Indexer:</b> receives and processes that data, breaks it into events, handles fields and timestamps, and stores it in an index so it becomes searchable. <b>Search Head:</b> is the analyst-facing search layer; it accepts searches, distributes them to indexers, receives results, and presents those results for investigation, visualization, alerts, and reports.<br><br><b>Why the sequence matters:</b> each component solves a different problem in the data journey. Collection without indexing does not create searchable Splunk events, and a Search Head without searchable indexed data has nothing useful to investigate.";state.operator=true;unlock("op","You just built the path Source → Forwarder → Indexer → Search Head. Which handoff in that pipeline is most important for turning raw machine data into something an analyst can actually investigate, and why?")}else{let msgs=[];sels.forEach((x,i)=>{if(x.value!==x.dataset.answer)msgs.push(["Source collection","Processing + storage","Analyst interaction"][i])});f.innerHTML=`<b>Pipeline test: ${correct}/3 stages operational.</b><br>The following responsibilities still need attention: <b>${msgs.join(", ")}</b>.<br><br>Trace one event from <b>web01</b>: something must collect it, something must turn it into a searchable event, and something must let the analyst search the result. Adjust the configuration and test again.`;}}
+function unlock(prefix,prompt){let box=document.getElementById(prefix+"NoteBox");box.classList.remove("locked");box.querySelector(".locklabel").textContent=prefix==="op"?"Performance Note":prefix==="det"?"Investigation Note":"Decision Note";document.getElementById(prefix+"NotePrompt").textContent=prompt;document.getElementById(prefix+"Next").disabled=false}
+function finishNote(prefix,stage,next){let t=document.getElementById(prefix+"Note").value.trim();if(t.length<25){alert("Please add a meaningful reasoning note (at least a short complete explanation).");return}completeStage(stage);go(next)}
+const detRecords={
+ e1:{title:"AUTH · Repeated failed logins",raw:"09:14:02  user=jrivera  src=10.22.8.44  result=FAIL  count=17",meaning:"Seventeen failures from one source against the same account establish an authentication anomaly worth correlating with later events.",label:"17 failed logins"},
+ e2:{title:"AUTH · Successful login",raw:"09:16:31  user=jrivera  src=10.22.8.44  result=SUCCESS",meaning:"The same account and source that produced the failures later produced a successful authentication. The relationship is important; the record alone does not establish who was behind it.",label:"Successful login"},
+ e3:{title:"NETWORK · Outbound HTTPS",raw:"09:18:10  src=app-03  dst=198.51.100.24  proto=HTTPS  bytes=842119",meaning:"This record shows a sizable outbound HTTPS session shortly after the authentication events. It supports correlation and further investigation, but the network record alone does not prove malicious intent.",label:"Outbound HTTPS"},
+ e4:{title:"SENSOR · Normal temperature",raw:"09:18:12  sensor=sensor07  temp=71F  status=NORMAL",meaning:"This is valid machine data, but it describes environmental status. Similar timing does not automatically make two records part of the same security sequence.",label:"Normal sensor"}
+};
+let detCurrent=null; const detClass={};
+function inspectDet(id){detCurrent=id;let r=detRecords[id];document.getElementById("inspectTitle").textContent=r.title;document.getElementById("inspectArtifact").textContent=r.raw;document.getElementById("inspectMeaning").textContent=r.meaning;document.getElementById("classifyButtons").style.display="flex";document.querySelectorAll("#detTimeline .evidence").forEach(x=>x.classList.toggle("selected",x.dataset.id===id))}
+function classifyDet(kind){if(!detCurrent)return;detClass[detCurrent]=kind;renderCorrelation()}
+function renderCorrelation(){
+ let order=["e1","e2","e3","e4"],rel=order.filter(k=>detClass[k]==="relevant");
+ let ph=["1 · What happened first?","2 · What happened next?","3 · What followed?"];
+ ["corr1","corr2","corr3"].forEach((id,i)=>document.getElementById(id).textContent=rel[i]?detRecords[rel[i]].label:ph[i]);
+ let ctx=order.filter(k=>detClass[k]==="context");
+ document.getElementById("contextTray").innerHTML=ctx.length?"<b>Placed in context:</b><br>"+ctx.map(k=>"• "+detRecords[k].label).join("<br>"):"<b>Nothing placed here yet.</b><br><span class='small'>Place a valid but unrelated log here.</span>";
+ document.querySelectorAll("#detTimeline .evidence").forEach(x=>{x.classList.remove("good","bad");let k=detClass[x.dataset.id];if(k)x.classList.add(k===x.dataset.role?"good":"bad")});
+}
+function detHint(){let h=document.getElementById("detHintBox");h.className="feedback show info";h.innerHTML="<b>Walk it through:</b><br>① Start with the 17 failed logins. ② Find the event involving the <b>same user and source IP</b>. ③ Look for behavior shortly afterward that could extend the sequence into the network logs. ④ Ask whether the temperature sensor tells you anything about that authentication/network behavior. You are building a meaningful story from related evidence—not grouping logs simply because their timestamps are close."}
+function selectDetect(el){document.querySelectorAll("#detectChoices .choice").forEach(x=>x.classList.remove("selected"));el.classList.add("selected");state.detectChoice=el}
+function checkDetective(){let f=document.getElementById("detFeedback"),correctClass=detClass.e1==="relevant"&&detClass.e2==="relevant"&&detClass.e3==="relevant"&&detClass.e4==="context";if(Object.keys(detClass).length<4){f.className="feedback show warn";f.innerHTML="<b>Investigation incomplete.</b> Inspect and classify all four records before closing the case.";return}if(!state.detectChoice){f.className="feedback show warn";f.innerHTML="<b>Record an analyst finding.</b> Your correlation board is only the evidence collection step; now state what that evidence supports.";return}let good=state.detectChoice.dataset.correct==="1";document.querySelectorAll("#detectChoices .choice").forEach(x=>x.classList.remove("good","bad"));state.detectChoice.classList.add(good?"good":"bad");if(good&&correctClass){f.className="feedback show success";f.innerHTML="<b>Case reconstruction complete.</b><br><br><b>Why this conclusion holds up:</b> it recognizes the meaningful timing and behavioral relationship across the authentication and network records while preserving an important evidence boundary: the records do not directly establish that the successful login caused the outbound session. That distinction matters in Splunk investigations—correlation can raise investigative confidence without converting an inference into a proven fact.<br><br><b>Why the alternatives were tempting:</b> one correctly notices the strong authentication pattern but separates the network event too aggressively; another offers a plausible compromise hypothesis but promotes it to a working explanation before the evidence confirms it; the last correctly notices the large outbound transfer but gives one indicator more evidentiary weight than the complete sequence supports.";state.detective=true;unlock("det","Several conclusions were plausible. What specific wording or evidence boundary helped you decide which conclusion was strongest, and what additional Splunk evidence would you seek before asserting account compromise or data exfiltration?")}else{f.className="feedback show warn";f.innerHTML="<b>Close call—reassess the strength of the claim.</b><br><br>All four conclusions contain something defensible, so focus on <b>how far each one goes beyond the evidence</b>. Ask yourself: Which statement uses the complete sequence, distinguishes observation from inference, and avoids turning a plausible hypothesis into an established fact? Review your correlation board and try again.";}}
+const judgeState={reqs:new Set(),final:null};
+function toggleJudgeReq(el){
+ let k=el.dataset.key;
+ if(judgeState.reqs.has(k)){judgeState.reqs.delete(k);el.classList.remove("selected")}
+ else {if(judgeState.reqs.size>=2){let first=[...judgeState.reqs][0];judgeState.reqs.delete(first);document.querySelector(`#judgeReqs [data-key="${first}"]`).classList.remove("selected")}judgeState.reqs.add(k);el.classList.add("selected")}
+ let f=document.getElementById("judgeReqFeedback");
+ if(judgeState.reqs.size===2){f.className="feedback show info";f.innerHTML="<b>Two drivers selected.</b> Now use them to test each deployment. Ask which requirements actually distinguish one model from another rather than requirements all models can satisfy."}
+}
+function judgeFit(sel){sel.closest(".decision-card").style.borderColor=sel.value?"#8fb6ca":""}
+function selectJudgeFinal(el){document.querySelectorAll(".judge-final").forEach(x=>x.classList.remove("selected"));el.classList.add("selected");judgeState.final=el.dataset.value}
+function judgeHint(){let h=document.getElementById("judgeHintBox");h.className="feedback show info";h.innerHTML="<b>Boardroom clue:</b> Start by separating requirements that are generally possible in Splunk from requirements that distinguish deployment types. Then compare <b>one instance vs. multiple instances</b> and <b>self-managed vs. third-party managed</b>. Those distinctions carry more decision weight here than simply needing search capability."}
+function checkJudge(){
+ let fits=[...document.querySelectorAll('[data-deploy]')],notes=["fitStandalone","fitDistributed","fitCloud"].map(id=>document.getElementById(id).value.trim());
+ let just=document.getElementById("judgeJust").value.trim(),f=document.getElementById("judgeFeedback");
+ if(judgeState.reqs.size<2||fits.some(x=>!x.value)||notes.some(x=>x.length<12)||!judgeState.final||just.length<35){
+  f.className="feedback show warn";f.innerHTML="<b>Your board packet is incomplete.</b> Select two decision-driving requirements, assess all three deployment models, add a short trade-off note for each, choose a final recommendation, and defend it.";return
+ }
+ let reqGood=judgeState.reqs.has("multi")&&judgeState.reqs.has("manage");
+ let fitGood=fits.find(x=>x.dataset.deploy==="Standalone").value==="Weak fit"&&fits.find(x=>x.dataset.deploy==="Distributed").value==="Strong fit"&&fits.find(x=>x.dataset.deploy==="Cloud").value==="Possible with trade-offs";
+ let finalGood=judgeState.final==="Distributed";
+ if(reqGood&&fitGood&&finalGood){
+  f.className="feedback show success";
+  f.innerHTML="<b>Architecture Review Board: recommendation supported.</b><br><br><b>Why the decision holds:</b> Harborline's two strongest distinguishing constraints are growth beyond one instance and its desire to retain management of its own infrastructure. A distributed deployment directly supports multiple Splunk instances with specialized responsibilities while remaining compatible with Harborline managing the environment.<br><br><b>Trade-offs you evaluated:</b> Standalone concentrates ingestion, indexing, search, and visualization in one instance, conflicting with the stated expansion direction. Cloud can resemble a distributed model, but the lesson defines it as hosted and managed by a third-party cloud provider, creating tension with Harborline's management requirement.<br><br><b>Professional takeaway:</b> evaluation is not just identifying what each deployment is—it is matching documented characteristics to stakeholder constraints.";
+  state.judge=true;unlock("judge","You evaluated all three deployment types before recommending Distributed. Which Harborline requirement eliminated or weakened the strongest alternative, and why was that requirement more important than simply choosing the most scalable-sounding option?")
+ }else{
+  f.className="feedback show warn";
+  f.innerHTML="<b>The board is challenging your recommendation.</b><br><br>Your answer may contain reasonable thinking, but one or more decisions do not align tightly enough with the lesson-defined deployment characteristics and Harborline's stated constraints. Revisit: <b>How many Splunk instances are expected?</b> and <b>Who does Harborline want managing the infrastructure?</b> Then reassess the three models before presenting again."
+ }
+}
+function finishReflection(){let t=document.getElementById("finalReflection").value.trim();if(t.length<25){alert("Please complete the reflection with a meaningful response.");return}completeStage(10);go(11)}
+function renderSummary(){let esc=s=>String(s||"").replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));document.getElementById("summaryContent").innerHTML=`
+<div class="grid"><div class="c4"><div class="small">Learner</div><b>${esc(state.name)}</b></div><div class="c4"><div class="small">Lesson</div><b>200.1 Splunk Basics</b></div><div class="c4"><div class="small">Cycle</div><b>Operator → Detective → Judge</b></div></div>
+<hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+<h4>Operator · Performance Note</h4><p>${esc(document.getElementById("opNote").value)}</p>
+<h4>Detective · Investigation Note</h4><p>${esc(document.getElementById("detNote").value)}</p>
+<h4>Judge · Decision Note</h4><p>${esc(document.getElementById("judgeNote").value)}</p>
+<h4>Final Reflection</h4><p>${esc(document.getElementById("finalReflection").value)}</p>`}
+document.addEventListener("input",e=>{if(e.target.id==="learnerName"){state.name=e.target.value}});
+buildNav();
+</script>
+</body>
+</html>
